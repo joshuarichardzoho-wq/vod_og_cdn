@@ -1,6 +1,6 @@
 //$Id$
 
-var VODTemplate = {};
+var VODTemplate = {}; // testing
 
 VODTemplate = (function (){
 	const _templates_v2 = 
