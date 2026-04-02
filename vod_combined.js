@@ -3,7 +3,6 @@
 var VODTemplate = {}; // testing
 
 VODTemplate = (function (){
-    const abcd = '';
 	const _templates_v2 = 
 	{
 		vodDemoPage :
