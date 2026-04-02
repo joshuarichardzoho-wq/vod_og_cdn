@@ -23,10 +23,11 @@ textarea:focus-visible {
 
 @font-face {
   font-family: 'zchat';
-  src:  url('../vod_og_cdn/vod.eot') format('embedded-opentype'),
-    url('../vod_og_cdn/vod.ttf') format('truetype'),
-    url('../vod_og_cdn/vod.woff') format('woff'),
-    url('../vod_og_cdn/vod.svg') format('svg');
+  src:  url('../../styles_v2/fonts/landingpage/vod/vod.eot');
+  src:  url('../../styles_v2/fonts/landingpage/vod/vod.eot') format('embedded-opentype'),
+    url('../../styles_v2/fonts/landingpage/vod/vod.ttf') format('truetype'),
+    url('../../styles_v2/fonts/landingpage/vod/vod.woff') format('woff'),
+    url('../../styles_v2/fonts/landingpage/vod/vod.svg') format('svg');
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -2000,9 +2001,58 @@ input:checked + .slider {
   font-size: 14px;
   line-height: 20px;
   max-height: 120px;
-  overflow-y: auto;
+  overflow-y: scroll;
   word-break: break-word;
   white-space: pre-wrap;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+}
+
+.rtcp-vod-viewers-comment .rtcp-viewer-commenter-box-input-sec.rtcp-comment-collapsed {
+  max-height: 60px;
+  overflow-y: hidden;
+}
+
+.rtcp-vod-viewers-comment .rtcp-viewer-commenter-box-input-sec.rtcp-comment-expanded {
+  max-height: 225px;
+  overflow-y: auto;
+}
+
+.rtcp-viewer-comment-readmore {
+  width: fit-content;
+  margin-top: 8px;
+  color: #377dff;
+  font-size: 13px;
+  line-height: 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.rtcp-vod-viewers-comment-box.active .rtcp-viewer-comment-readmore {
+  display: none !important;
+}
+
+/* Webkit scrollbar styling */
+.rtcp-vod-homepage .rtcp-self-commenter-box-input-sec::-webkit-scrollbar,
+.rtcp-vod-homepage .rtcp-viewer-commenter-box-input-sec::-webkit-scrollbar {
+  width: 6px;
+}
+
+.rtcp-vod-homepage .rtcp-self-commenter-box-input-sec::-webkit-scrollbar-track,
+.rtcp-vod-homepage .rtcp-viewer-commenter-box-input-sec::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 3px;
+}
+
+.rtcp-vod-homepage .rtcp-self-commenter-box-input-sec::-webkit-scrollbar-thumb,
+.rtcp-vod-homepage .rtcp-viewer-commenter-box-input-sec::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
+.rtcp-vod-homepage .rtcp-self-commenter-box-input-sec::-webkit-scrollbar-thumb:hover,
+.rtcp-vod-homepage .rtcp-viewer-commenter-box-input-sec::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
 .rtcp-self-commenter-box.active, .rtcp-vod-viewers-comment-box.active .rtcp-vod-viewers-comment{
@@ -2010,7 +2060,7 @@ input:checked + .slider {
   box-shadow: 0px 2px 0px 0px rgba(55, 125, 255, 0.15);
 }
 
-.rtcp-vod-viewers-comment-box.active .rtcp-vod-viewers-comment {background: #ffffff; border-radius: 8px}
+.rtcp-vod-viewers-comment-box.active .rtcp-vod-viewers-comment {background: var(--background-32); border-radius: 8px}
 
 .rtcp-vod-viewers-comment:focus-within{
   border-radius: 8px;
@@ -2050,7 +2100,7 @@ input:checked + .slider {
   flex: 1;
 }
 .rtcp-self-comment-cancel-btn{
-  color: #545A6A;
+  color: var(--font-color-11);
   font-size: 16px;
   line-height: 34px;
   letter-spacing: 0.16px;
@@ -2168,7 +2218,7 @@ input:checked + .slider {
 .rtcp-vod-reply-comment .rtcp-self-comment-actions-outer {position: relative; left: -14px;}
 
 .rtcp-vod-viewers-comment{
-  display: flex;
+  /* display: flex; */
   flex-grow: 1;
   gap: 10px;
   justify-content: space-between;
@@ -2622,7 +2672,7 @@ input:checked + .slider {
 {
   opacity: 0.75;
   text-align: center;
-  color: #545A6A;
+  color: var(--font-color-11);
   font-size: 14px;
   font-weight: 400;
   line-height: 20px;
@@ -4392,7 +4442,7 @@ span.rtcp-demo-vod-add-chapters-modal-body-textarea-counter {
 }
 
 .rtcp-demp-vod-add-chapter-elem-rhs .rtcp-demo-vod-icon-edit:hover {
-    color: #545A6A;
+    color: var(--font-color-11);
 }
 
 .rtcp-demp-vod-add-chapter-elem-rhs .rtcp-demo-vod-toggle-description {
@@ -4430,7 +4480,7 @@ span.rtcp-demo-vod-add-chapters-modal-body-textarea-counter {
 }
 
 .rtcp-demp-vod-add-chapter-elem-rhs .rtcp-demo-vod-icon-toggle-description:hover {
-    color: #545A6A;
+    color: var(--font-color-11);
 }
 
 .rtcp-demp-vod-add-chapter-elem-header {

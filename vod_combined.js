@@ -1,6 +1,6 @@
 //$Id$
 
-var VODTemplate = {}; // testing
+var VODTemplate = {};
 
 VODTemplate = (function (){
 	const _templates_v2 = 
@@ -469,8 +469,9 @@ VODTemplate = (function (){
 							{{comment_self_actions}}
 						</div>
 						<div class="rtcp-vod-viewers-comments-outer rtcp-vod-self-reply">
-							<div class="rtcp-vod-viewers-comment" rtcpvodactionbtn purpose="editComment">
+							<div class="rtcp-vod-viewers-comment">
 								<div class="rtcp-viewer-commenter-box-input-sec">{{comment}}</div>
+								<div class="rtcp-viewer-comment-readmore dN" rtcpvodactionbtn purpose="toggleCommentReadMore">Read more</div>
 								<div class="rtcp-self-commenter-box-emojis" tooltip-title="Reactions"></div>
 							</div>
 							{{comment_actions}}
@@ -1018,13 +1019,15 @@ VODTemplate = (function (){
 			userId = userId.split('_')[2];
 		}
 
+		const isCurrentUser = session.isCurrentUser(userId);
+
 		return $RTCPTemplate.replace(_templates_v2.viewerComment, {
 			id : id,
 			user_img : session.getUserImage(userId),
-			user_name : session.isCurrentUser(userId) ? 'You' : VODProcessXss.processXSS(commentInfo.dname),
+			user_name : isCurrentUser ? 'You' : VODProcessXss.processXSS(commentInfo.dname),
 			time : vodDemo.parseCommentTime(commentInfo.time),
 			comment : VODProcessXss.processXSS(commentInfo.comment) || "",
-			comment_self_actions: true ? '<div class="rtcp-vod-viewers-comment-actions rtcp-demo-vod-icon-comment-actions" rtcpvodactionbtn purpose="openSelfCommentActions"></div>' : "", // isCurrentUser
+			comment_self_actions: isCurrentUser ? '<div class="rtcp-vod-viewers-comment-actions rtcp-demo-vod-icon-comment-actions" rtcpvodactionbtn purpose="openSelfCommentActions"></div>' : "", // isCurrentUser
 			comment_actions : _getCommentActions()
 		}, "InSecureHTML");
 	}
@@ -2661,6 +2664,27 @@ var vodDemoHandler =
             parent.attr('tooltip-title', isLiked ? 'Like' : 'Unlike').find('.rtcp-vod-like-count').text(isLiked ? 0 : 1);
         },
 
+        toggleCommentReadMore : function(elem, event)
+        {
+            const comment = elem.closest('.rtcp-vod-viewers-comment').find('.rtcp-viewer-commenter-box-input-sec').first();
+
+            if(comment.length === 0)
+            {
+                return;
+            }
+
+            const isExpanded = comment.hasClass('rtcp-comment-expanded');
+
+            comment.toggleClass('rtcp-comment-expanded', !isExpanded);
+            comment.toggleClass('rtcp-comment-collapsed', isExpanded);
+            elem.text(isExpanded ? 'Read more' : 'Read less');
+
+            if(isExpanded)
+            {
+                comment.scrollTop(0);
+            }
+        },
+
         startCommentEdit : function(elem, event)
         {
             const editable = elem.find('.rtcp-self-commenter-box-input-sec');
@@ -2675,7 +2699,7 @@ var vodDemoHandler =
             vodDemoUtils.resetCursorPosition(editable.get(0), undefined, true);
 
             const parent = elem.closest('.rtcp-self-comment-box-sec');
-            const actions = $(VODTemplate.getAddCommentActions(['comment', 'postComment'])).attr('id', 'rtcp-vod-self-comment-actions');
+            const actions = $(VODTemplate.getAddCommentActions(['Comment', 'postComment'])).attr('id', 'rtcp-vod-self-comment-actions');
             
             parent.append(actions);
             vodDemoUtils.bindTextListeners(
@@ -2711,11 +2735,7 @@ var vodDemoHandler =
                 elem.removeClass('active').off('mousedown');
                 editable.blur().removeAttr('contenteditable');
                 actions.remove();
-
-                if(editable.text().trim().length === 0)
-                {
-                    editable.html('');
-                }
+                editable.html('');
             };
 
             actions.find('.rtcp-self-comment-cancel-btn').on('click', function()
@@ -2755,13 +2775,13 @@ var vodDemoHandler =
             const contentId = vodDemo.getDOM(vodDemoConstant.UIConstants.VIEWER).attr('contentId');
             const commentSec = vodDemo.getDOM(vodDemoConstant.UIConstants.COMMENT_SEC);
             const msgBox = commentSec.find('.rtcp-self-commenter-box-input-sec');
-            const msg = msgBox[0].innerText;
+            const msg = msgBox[0].innerText.trim();
             
             const session = vodDemo.getVodDemoSession();
             const content = session.getVodContent(contentId);
             const vodStudio = content && content.vodStudio;
             
-            if(msg.trim().length === 0 || !vodStudio)
+            if(msg.length === 0 || !vodStudio)
             {
                 return;
             }
@@ -2783,6 +2803,7 @@ var vodDemoHandler =
                 }
                 
                 viewerCommentsList.prepend(commentHTML);
+                vodDemoUtils.refreshViewerCommentReadMore(commentHTML);
 
                 commentSec.find('.rtcp-vod-total-comments-count').text(vodStudio.getCommentsCount())
 
@@ -2809,7 +2830,7 @@ var vodDemoHandler =
             const commentBox = elem.closest('.rtcp-vod-viewers-comment-box');
             const msgBox = commentBox.find('.rtcp-viewer-commenter-box-input-sec');
             const commentId = commentBox.attr('id');
-            const msg = msgBox.text();
+            const msg = msgBox.text().trim();
 
             const cancelBtn = elem.parent().find('.rtcp-self-comment-cancel-btn');
             const closeCB = () => cancelBtn.trigger('click');
@@ -2851,6 +2872,7 @@ var vodDemoHandler =
             {
                 closeCB();
                 msgBox.text(msg);
+                vodDemoUtils.refreshViewerCommentReadMore(commentBox);
                 commentBox.find('.rtcp-vod-viewers-commented-time').text('Just now');
             }
 
@@ -2912,18 +2934,23 @@ var vodDemoHandler =
 
         editComment : function(elem, event)
         {
-            let commentBox = elem.closest('.rtcp-vod-viewers-comment');
-            let commentId;
+            const commentId = elem.closest('.rtcp-vod-more-opt-cont').attr('comment_id');
+            const commentBox = vodDemo.getDOM('comment_sec').find(`#${commentId}`);
 
-            if(commentBox.length === 0)
+            const session = vodDemo.getVodDemoSession();
+            const content = session.getVodContent(vodDemo.getDOM(vodDemoConstant.UIConstants.VIEWER).attr('contentId'));
+            const vodStudio = content && content.vodStudio;
+
+            if(!vodStudio)
             {
-                commentId = elem.closest('.rtcp-vod-more-opt-cont').attr('comment_id');
-                commentBox = vodDemo.getDOM('comment_sec').find(`#${commentId}`);
+                return;
             }
-            else
+            
+            const commentUser = vodStudio.getComments()[commentId].userid.split('_')[2];
+
+            if(!vodDemo.getVodDemoSession().isCurrentUser(commentUser))
             {
-                commentBox = elem.closest('.rtcp-vod-viewers-comment-box');
-                commentId = commentBox.closest('.rtcp-vod-viewers-comment-box').attr('id');
+                return;
             }
 
             const editable = commentBox.find('.rtcp-viewer-commenter-box-input-sec');            
@@ -2954,7 +2981,7 @@ var vodDemoHandler =
                 }
             });
 
-            const actions = $(VODTemplate.getAddCommentActions(['save', 'updateComment']));
+            const actions = $(VODTemplate.getAddCommentActions(['Save', 'updateComment']));
             commentBox.find('.rtcp-vod-viewers-comment').after(actions);
 
             const blurHandler = vodDemo.getBlurHandler();
@@ -3006,6 +3033,13 @@ var vodDemoHandler =
                 return;
             }
 
+            const commentUser = vodStudio.getComments()[commentId].userid.split('_')[2];
+
+            if(!session.isCurrentUser(commentUser))
+            {
+                return;
+            }
+
             const successCB = () =>
             {
                 commentBox.remove();
@@ -3014,7 +3048,7 @@ var vodDemoHandler =
 
             const errorCB = (err) =>
             {
-                vodDemo.pushNotification("Error updating comment. Please try again.", true);
+                vodDemo.pushNotification("Error while deleting comment. Please try again.", true);
             }
 
             vodStudio.deleteComment({id : commentId}, successCB, errorCB); 
@@ -3525,6 +3559,40 @@ var vodDemoUtils =
 
             elem.on('error.vodTextListeners', showInputError);
         }
+    },
+
+    refreshViewerCommentReadMore : function(scope)
+    {
+        const root = scope && scope.length ? scope : $(document);
+        const comments = root.find('.rtcp-vod-viewers-comment');
+
+        comments.each(function()
+        {
+            const commentBox = $(this);
+            const content = commentBox.find('.rtcp-viewer-commenter-box-input-sec').first();
+            const readMoreBtn = commentBox.find('.rtcp-viewer-comment-readmore').first();
+
+            if(content.length === 0 || readMoreBtn.length === 0)
+            {
+                return;
+            }
+
+            content.removeClass('rtcp-comment-expanded').addClass('rtcp-comment-collapsed');
+            readMoreBtn.text('Read more');
+
+            const node = content[0];
+            const hasOverflow = node.scrollHeight > node.clientHeight + 1;
+
+            if(hasOverflow)
+            {
+                readMoreBtn.removeClass('dN');
+            }
+            else
+            {
+                content.removeClass('rtcp-comment-collapsed');
+                readMoreBtn.addClass('dN');
+            }
+        });
     }
 };/**
  * 
@@ -7310,6 +7378,7 @@ vodDemo =
                 commentSec.find('.rtcp-vod-total-comments-count').text(Object.keys(comments).length);
 
                 rootHolder.replaceWith(viewerCommentsList);
+                vodDemoUtils.refreshViewerCommentReadMore();
             }
 
             vodStudio.loadComments(successCB);
