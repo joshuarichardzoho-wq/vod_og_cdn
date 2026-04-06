@@ -1903,14 +1903,14 @@ class ZRVODViewer
                 return;
             }
 
-            const id = Date.now();
+            const id = msgId.split("%")[1];
 
             const commentInfo = 
             {
                 dname : commentObj.dname, 
                 userid : this.getUserId(),
                 comment : msg, 
-                time : id,
+                time : Date.now().toString(),
                 msgid : msgId
             };
 
@@ -2897,7 +2897,7 @@ var vodDemoHandler =
             const commentBox = elem.closest('.rtcp-vod-viewers-comment-box');
             const msgBox = commentBox.find('.rtcp-viewer-commenter-box-input-sec');
             const commentId = commentBox.attr('id');
-            const msg = msgBox.text().trim();
+            const msg = msgBox[0].innerText.trim();
 
             const cancelBtn = elem.parent().find('.rtcp-self-comment-cancel-btn');
             const closeCB = () => cancelBtn.trigger('click');
@@ -2938,7 +2938,7 @@ var vodDemoHandler =
             const successCB = () =>
             {
                 closeCB();
-                msgBox.text(msg);
+                msgBox[0].innerText = VODProcessXss.processXSS(msg);
                 vodDemoUtils.refreshViewerCommentReadMore(commentBox);
                 commentBox.find('.rtcp-vod-viewers-commented-time').text('Just now');
             }
@@ -2947,7 +2947,7 @@ var vodDemoHandler =
             {
                 vodDemo.pushNotification("Error updating comment. Please try again.", true);
                 closeCB();
-                msgBox.text(previousComment);
+                msgBox[0].innerText = VODProcessXss.processXSS(previousComment);
             }
 
             vodStudio.editComment({id : commentId, comment : msg}, successCB, errorCB); 
@@ -3053,6 +3053,8 @@ var vodDemoHandler =
 
             const blurHandler = vodDemo.getBlurHandler();
 
+            const moreOption = commentBox.find('.rtcp-vod-viewers-comment-actions').addClass('dN'); // to keep the more option button in active state while editing comment
+
             const onBlurListener = function()
             {
                 if(commentBox.hasClass('active') && document.activeElement === editable.get(0))
@@ -3071,6 +3073,7 @@ var vodDemoHandler =
                 editable.removeAttr('contenteditable aria-label');
                 editable.blur();
                 actions.remove();
+                moreOption.removeClass('dN'); // to remove the active state from more option button when comment edit is closed
             };
 
             actions.find('.rtcp-self-comment-cancel-btn').on('click', function()
@@ -3582,16 +3585,39 @@ var vodDemoUtils =
             {
                 event.preventDefault();
                 var text = (event.originalEvent || event).clipboardData.getData('text/plain');
-                var selection = window.getSelection();
 
-                if(selection.rangeCount)
+                // Prefer native insertion path for proper undo history.
+                // Some browsers return false even when insertion succeeds, so do not branch on return value.
+                var inserted = false;
+
+                try
                 {
-                    var range = selection.getRangeAt(0);
-                    range.deleteContents();
-                    range.insertNode(document.createTextNode(text));
-                    range.collapse(false);
-                    selection.removeAllRanges();
-                    selection.addRange(range);
+                    if(typeof document.execCommand === 'function')
+                    {
+                        document.execCommand('insertText', false, text);
+                        inserted = true;
+                    }
+                }
+                catch(e)
+                {
+                    inserted = false;
+                }
+
+                if(!inserted)
+                {
+                    var selection = window.getSelection();
+
+                    if(selection.rangeCount)
+                    {
+                        var range = selection.getRangeAt(0);
+                        range.deleteContents();
+                        var textNode = document.createTextNode(text);
+                        range.insertNode(textNode);
+                        range.setStartAfter(textNode);
+                        range.setEndAfter(textNode);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    }
                 }
 
                 elem.trigger('input'); // trigger input event manually so changeListener (limit enforcement) still fires
@@ -7050,12 +7076,13 @@ vodDemo =
         const title = titleCont.val();
         const description = descriptionCont.val();
 
+        const content = this.getVodDemoSession().getVodContent(id);
+
         const successCallBack = (resp) =>
         {
             vodDemo.pushNotification('Content meta info updated successfully.');
             elem.removeClass('restricted');
-
-            const content = this.getVodDemoSession().getVodContent(id);
+            
             const newMeta = resp.data || {};
             content.title = newMeta.title;
             content.description = newMeta.description;
@@ -7069,8 +7096,8 @@ vodDemo =
             vodDemo.pushNotification('Error while updating video meta. Please try again.', true);
             elem.removeClass('restricted');
 
-            titleCont.trigger('input');
-            descriptionCont.trigger('input');
+            titleCont.val(content.title).trigger('input');
+            descriptionCont.val(content.description).trigger('input');
         }
 
         vodDemoApi.updateMetaInfo(id, { title, description }, successCallBack, errorCallBack);
@@ -7109,8 +7136,6 @@ vodDemo =
         const wasInViewerPage = (viewer.length > 0);
         const prevActiveTab = this.getActiveTab();
         const rootHolder = $(document.createComment('root-holder'));
-
-        root.replaceWith(rootHolder);
         
         if(wasInViewerPage)
         {
@@ -7125,6 +7150,8 @@ vodDemo =
             this.viewerState = {};
             $(window).off('.vod_viewer');
         }
+
+        root.replaceWith(rootHolder);
 
         if(!this.getDOM(vodDemoConstant.UIConstants.HEADER).length)
         {
@@ -7262,6 +7289,7 @@ vodDemo =
         let vodStudio = content.vodStudio;
         let commentSec = viewerPage.find('.rtcp-vod-comment-sec');
         let commentBox = viewerPage.find('.rtcp-self-comment-sec');
+        let selfCommentCont = commentBox.find('.rtcp-self-commenter-box');
         
         if(this.getDOM(vodDemoConstant.UIConstants.HEADER).length === 0)
         {
@@ -7279,6 +7307,7 @@ vodDemo =
             commentBox = $(VODTemplate.getCommentBox(session.getUserImage()));
             viewerRHS = viewerPage.find('.rtcp-vod-viewerpage-rhs');
             descCont = viewerPage.find('.rtcp-vod-video-desc-container');
+            selfCommentCont = commentBox.find('.rtcp-self-commenter-box');
 
             root.append(viewerPage);
             viewerPage.find('.rtcp-vod-comment-sec-header').after(commentBox);
@@ -7302,13 +7331,15 @@ vodDemo =
 
             //reset comment box state when navigating to a different content from viewer page
             const selfCommentBox = commentBox.find('.rtcp-self-commenter-box-input-sec');
+            
             selfCommentBox.text('').removeAttr('contenteditable').trigger('input');
-            commentBox.find('.rtcp-self-commenter-box').removeClass('active');
             commentSec.find('#rtcp-vod-self-comment-actions').addClass('dN');
 
             viewerPage.find('.rtcp-vod-video-container').attr('id', playerId);
             viewerPage.attr('contentid', contentId);
         }
+
+        selfCommentCont.removeClass('active').addClass('comment_disabled');
         
         const wrapper = descCont.find('.rtcp-vod-video-desc-wrapper');
         const maxDescLen = vodDemo.getContentConfig('length', 'max_description');
@@ -7469,6 +7500,8 @@ vodDemo =
 
                 rootHolder.replaceWith(viewerCommentsList);
                 vodDemoUtils.refreshViewerCommentReadMore();
+
+                selfCommentCont.removeClass('comment_disabled');
             }
 
             vodStudio.loadComments(successCB);
@@ -7505,8 +7538,11 @@ vodDemo =
             const height_2 = Math.round((multiplier[1] * width_2) / multiplier[0]);
             const offset = ((width_1 * height_1) < (width_2 * height_2)) ? {width : width_1, height : height_1} : {width : width_2, height : height_2};
 
-            viewerLhs.css({width : offset.width+'px'});
-            videoContainer.css({height : offset.height+'px', width : offset.width+'px'});
+            const newHeight = Math.max(offset.height, 0.60 * window.innerHeight) + 'px';
+            const newWidth = Math.max(offset.width, 0.60 * window.innerWidth) + 'px';
+
+            viewerLhs.css({width : newWidth});
+            videoContainer.css({height : newHeight, width : newWidth});
         });
     },
 
