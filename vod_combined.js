@@ -254,9 +254,9 @@ VODTemplate = (function (){
 						<div class="rtcp-demo-vod-toggle-description" rtcp_demo_tooltip="Open" rtcpvodactionbtn purpose="toggleChapterDescription">
 							<div class="rtcp-demo-vod-icon-toggle-description"></div>
 						</div>
-						<div class="rtcp-demo-vod-video-cont-vertical-sep"></div>
-						<div class="rtcp-demo-vod-icon-edit" rtcp_demo_tooltip="Edit" rtcpvodactionbtn purpose="openAddChapterModal"></div>
-						<div class="rtcp-demo-vod-icon-delete" rtcp_demo_tooltip="Delete" rtcpvodactionbtn purpose="deleteChapter"></div>
+						<div class="rtcp-demo-vod-video-cont-vertical-sep dN"></div>
+						<div class="rtcp-demo-vod-icon-edit dN" rtcp_demo_tooltip="Edit" rtcpvodactionbtn purpose="openAddChapterModal"></div>
+						<div class="rtcp-demo-vod-icon-delete dN" rtcp_demo_tooltip="Delete" rtcpvodactionbtn purpose="deleteChapter"></div>
 					</div>
 				</div>
 				<div class="rtcp-demp-vod-add-chapter-elem-body">
@@ -510,7 +510,7 @@ VODTemplate = (function (){
 		queueHeader :
 			`<div class="rtcp-vod-viewerpage-rhs-header center">
 				<div class="rtcp-vod-morevideos">{{more_videos_title}}</div>
-				<div class="rtcp-vod-autoplay center">
+				<div class="rtcp-vod-autoplay center dN">
 					<div class="rtcp-vod-autoplay-title">{{autoplay_title}}</div>
 					<div class="">
 						{{slider}}
@@ -675,6 +675,22 @@ VODTemplate = (function (){
 						<div class="rtcp-vod-category-skeleton-footer-title skeleton"></div>
 						<div class="rtcp-vod-category-skeleton-footer-info skeleton"></div>
 					</div>
+				</div>
+			</div>`,
+
+		deleteConfirmPopup :
+			`<div class="rtcp-vod-confirm-popup-overlay"></div>
+			<div class="rtcp-vod-confirm-popup">
+				<div class="rtcp-vod-confirm-popup-header">
+					<span class="rtcp-vod-confirm-popup-title">{{title}}</span>
+					<div class="rtcp-demo-vod-icon-close center" rtcpvodactionbtn purpose="closeConfirmPopup"></div>
+				</div>
+				<div class="rtcp-vod-confirm-popup-body">
+					<span>{{message}}</span>
+				</div>
+				<div class="rtcp-vod-confirm-popup-footer">
+					<div class="rtcp-vod-confirm-popup-cancel" rtcpvodactionbtn purpose="closeConfirmPopup">{{cancel_text}}</div>
+					<div class="rtcp-vod-confirm-popup-confirm" rtcpvodactionbtn purpose="{{confirm_purpose}}">{{confirm_text}}</div>
 				</div>
 			</div>`,
 
@@ -876,11 +892,52 @@ VODTemplate = (function (){
 
 	var _getChapterInfo = function(id, title, description, duration)
 	{
+		// const divTitle = VODProcessXss.processXSS(title);
+		// const divDescription = VODProcessXss.processXSS(description);
+
+		const divTitle = 'asasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasa';
+		const divDescription = 'asasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasa';
+
+		// const html = $RTCPTemplate.replace(`<div class="rtcp-vod-chapter-detail-info">
+		// 	<div class="rtcp-vod-chapter-detail-row">
+		// 		<div class="rtcp-vod-chapter-detail-label">Title :</div>
+		// 		<div class="rtcp-vod-chapter-detail-value">{{title}}</div>
+		// 	</div>
+		// 	<div class="rtcp-vod-chapter-detail-row">
+		// 		<div class="rtcp-vod-chapter-detail-label">Description :</div>
+		// 		<div class="rtcp-vod-chapter-detail-value">{{description}}</div>
+		// 	</div>
+		// 	<div class="rtcp-vod-chapter-detail-row">
+		// 		<div class="rtcp-vod-chapter-detail-label">Duration :</div>
+		// 		<div class="rtcp-vod-chapter-detail-value">{{duration}}</div>
+		// 	</div>
+		// </div>`,{
+		// 	title : divTitle,
+		// 	description : divDescription,
+		// 	duration : duration
+		// });
+
+		const html = $RTCPTemplate.replace(`<div class="rtcp-vod-chapter-detail-info">
+			<div class="rtcp-vod-chapter-detail-row">
+				<span class="rtcp-vod-chapter-detail-label">Title : </span><span>{{title}}</span>
+			</div>
+			<div class="rtcp-vod-chapter-detail-row">
+				<span class="rtcp-vod-chapter-detail-label">Description : </span><span>{{description}}</span>
+			</div>
+			<div class="rtcp-vod-chapter-detail-row">
+				<span class="rtcp-vod-chapter-detail-label">Duration : </span><span>{{duration}}</span>
+			</div>
+		</div>`,{
+			title : divTitle,
+			description : divDescription,
+			duration : duration
+		});
+
 		return $RTCPTemplate.replace(_templates_v2.chapterInfo, {
 			id : id,
 			duration: duration,
-			title: VODProcessXss.processXSS(title),
-			description: VODProcessXss.processXSS(description)
+			title: divTitle,
+			description: html//divDescription
 		}, "InSecureHTML");
 	}
 
@@ -1251,6 +1308,17 @@ VODTemplate = (function (){
 		return _templatesConfigs;
 	}
 
+	const _getDeleteConfirmPopup = function(commentId)
+	{
+		return $RTCPTemplate.replace(_templates_v2.deleteConfirmPopup, {
+			title : 'Delete Comment',
+			message : 'Are you sure you want to delete this comment?',
+			cancel_text : 'Cancel',
+			confirm_text : 'Delete',
+			confirm_purpose : 'confirmDeleteComment'
+		}, "InSecureHTML");
+	}
+
 	const _getZohoCelebrationBanner = () =>
 	{
 		return _templates_v2.zohoCelebrationBanner;
@@ -1295,6 +1363,7 @@ VODTemplate = (function (){
 		getVodHomePanelNoData : _getVodHomePanelNoData,
 		getTemplatesConfigs : _getTemplatesConfigs,
 		getVideoBoxWaveIcon : _getVideoBoxWaveIcon,
+		getDeleteConfirmPopup : _getDeleteConfirmPopup,
 		getZohoCelebrationBanner : _getZohoCelebrationBanner
     };
 }());
@@ -3018,15 +3087,28 @@ var vodDemoHandler =
 
         deleteComment : function(elem, event)
         {
-            const contentId = vodDemo.getDOM(vodDemoConstant.UIConstants.VIEWER).attr('contentId');
             const commentId = elem.closest('.rtcp-vod-more-opt-cont').attr('comment_id');
-            const commentBox = vodDemo.getDOM('comment_sec').find(`#${commentId}`);
 
             vodDemoHandler.UI.handleClickOnVodDemo();
+
+            const root = vodDemo.getDOM('root');
+            const popup = $(VODTemplate.getDeleteConfirmPopup(commentId));
+
+            popup.find('.rtcp-vod-confirm-popup-confirm').attr('comment_id', commentId);
+            root.append(popup);
+        },
+
+        confirmDeleteComment : function(elem, event)
+        {
+            const contentId = vodDemo.getDOM(vodDemoConstant.UIConstants.VIEWER).attr('contentId');
+            const commentId = elem.attr('comment_id');
+            const commentBox = vodDemo.getDOM('comment_sec').find(`#${commentId}`);
 
             const session = vodDemo.getVodDemoSession();
             const content = session.getVodContent(contentId);
             const vodStudio = content && content.vodStudio;
+
+            vodDemoHandler.UI.closeConfirmPopup();
 
             if(!vodStudio)
             {
@@ -3052,6 +3134,12 @@ var vodDemoHandler =
             }
 
             vodStudio.deleteComment({id : commentId}, successCB, errorCB); 
+        },
+
+        closeConfirmPopup : function(elem, event)
+        {
+            const root = vodDemo.getDOM('root');
+            root.find('.rtcp-vod-confirm-popup-overlay, .rtcp-vod-confirm-popup').remove();
         }
     },
 
