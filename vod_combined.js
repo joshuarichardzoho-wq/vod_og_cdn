@@ -2600,6 +2600,7 @@ var vodDemoHandler =
 
             listCont[args[0]]({complete : onComplete});
             elem.css('transform', 'rotate('+args[1]+'deg)');
+            vodDemoHandler.UI.handleClickOnVodDemo();
         },
 
         openUploadModal : function(elem, event)
@@ -7213,6 +7214,19 @@ vodDemo =
         const rootHolder = $(document.createComment('root-holder'));
         const isFromQueue = (videoSec === 'queue');
         let viewerRHS = this.getDOM(vodDemoConstant.UIConstants.VIEWER_RHS);
+        let viewerPage = this.getDOM(vodDemoConstant.UIConstants.VIEWER);
+        let isInViewerPage = (viewerPage.length > 0);
+
+        if(isInViewerPage)
+        {
+            const oldContentId = viewerPage.attr('contentid');
+            const oldContent = session.getVodContent(oldContentId);
+            
+            if(oldContent.vodStudio)
+            {
+                oldContent.vodStudio.closePlayer();
+            }
+        }
 
         let queueSec, scrollTop;
 
@@ -7246,7 +7260,6 @@ vodDemo =
         }
 
         let vodStudio = content.vodStudio;
-        let viewerPage = this.getDOM(vodDemoConstant.UIConstants.VIEWER);
         let commentSec = viewerPage.find('.rtcp-vod-comment-sec');
         let commentBox = viewerPage.find('.rtcp-self-comment-sec');
         
@@ -7259,7 +7272,7 @@ vodDemo =
 
         let descCont = this.getDOM(vodDemoConstant.UIConstants.DESC_SEC);
 
-        if(!viewerPage.length)
+        if(!isInViewerPage)
         {
             viewerPage = $(VODTemplate.getViewerPage(playerId, session, content)).attr('contentId',contentId);
             commentSec = viewerPage.find('.rtcp-vod-comment-sec');
@@ -7277,14 +7290,6 @@ vodDemo =
         }
         else
         {
-            const oldContentId = viewerPage.attr('contentid');
-            const oldContent = session.getVodContent(oldContentId);
-            
-            if(oldContent.vodStudio)
-            {
-                oldContent.vodStudio.closePlayer();
-            }
-
             descCont.find('.rtcp-vod-video-title').text(content.title);
             descCont.find('.rtcp-vod-video-posted-date').text(content.date);
             descCont.find('.rtcp-vod-video-posted-time').text(content.time);
