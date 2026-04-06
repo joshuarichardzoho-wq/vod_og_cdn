@@ -892,11 +892,8 @@ VODTemplate = (function (){
 
 	var _getChapterInfo = function(id, title, description, duration)
 	{
-		// const divTitle = VODProcessXss.processXSS(title);
-		// const divDescription = VODProcessXss.processXSS(description);
-
-		const divTitle = 'asasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasa';
-		const divDescription = 'asasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasasasasaasa';
+		const divTitle = VODProcessXss.processXSS(title);
+		const divDescription = VODProcessXss.processXSS(description);
 
 		// const html = $RTCPTemplate.replace(`<div class="rtcp-vod-chapter-detail-info">
 		// 	<div class="rtcp-vod-chapter-detail-row">
