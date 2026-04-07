@@ -2970,7 +2970,10 @@ var vodDemoHandler =
             elem.addClass('active');
             const commentId = elem.closest('.rtcp-vod-viewers-comment-box').attr('id');
             const root = vodDemo.getDOM('root');
+            const viewerOuter = root.find('.rtcp-vod-viewerpage-outercontainer');
             const popup = $(VODTemplate.getSelfCommentActionsPopup(commentId));
+
+            viewerOuter.addClass('rtcp-vod-scroll-lock');
 
             root.append(popup);
 
@@ -2995,6 +2998,7 @@ var vodDemoHandler =
                 {
                     elem.removeClass('active');
                     popup.remove();
+                    viewerOuter.removeClass('rtcp-vod-scroll-lock');
                 }
             });
         },

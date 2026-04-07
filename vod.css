@@ -1026,6 +1026,11 @@ rtcp-vod-homepage .rtcp-vod-viewerpage-nextvideos[media-source="LIVEEVENT"]:hove
   /* height: 100vh; */
   /* position: fixed; */
 }
+
+.rtcp-vod-viewerpage-outercontainer.rtcp-vod-scroll-lock {
+  overflow: hidden;
+}
+
 .rtcp-vod-homepage .rtcp-vod-viewerpage-container{
   /* justify-content: flex-start; */
   /* padding: 32px 20px; */
@@ -1342,9 +1347,30 @@ input:checked + .slider {
   /* padding: 16px; */
   overflow-x: hidden;
   overflow-y: scroll;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-color-1);
   /* height: calc(100vh - 80px); */
   height: 672px;
 }
+
+.rtcp-vod-homepage .rtcp-vod-viewerpage-nextvideos-sec::-webkit-scrollbar {
+  width: 6px;
+}
+
+.rtcp-vod-homepage .rtcp-vod-viewerpage-nextvideos-sec::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rtcp-vod-homepage .rtcp-vod-viewerpage-nextvideos-sec::-webkit-scrollbar-thumb {
+  background: var(--background-27);
+  border: 1px solid var(--background-1);
+  border-radius: 4px;
+}
+
+.rtcp-vod-homepage .rtcp-vod-viewerpage-nextvideos-sec::-webkit-scrollbar-thumb:hover {
+  background: var(--font-color-14);
+}
+
 .rtcp-vod-viewerpage-nextvideos-list{
   flex-direction: column;
   /* gap: 16px; */
@@ -2017,7 +2043,7 @@ input:checked + .slider {
   word-break: break-word;
   white-space: pre-wrap;
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+  scrollbar-color: var(--scrollbar-color-1);
 }
 
 .rtcp-vod-viewers-comment .rtcp-viewer-commenter-box-input-sec.rtcp-comment-collapsed {
@@ -2058,13 +2084,14 @@ input:checked + .slider {
 
 .rtcp-vod-homepage .rtcp-self-commenter-box-input-sec::-webkit-scrollbar-thumb,
 .rtcp-vod-homepage .rtcp-viewer-commenter-box-input-sec::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: var(--background-27);
+  border: 1px solid var(--background-1);
   border-radius: 3px;
 }
 
 .rtcp-vod-homepage .rtcp-self-commenter-box-input-sec::-webkit-scrollbar-thumb:hover,
 .rtcp-vod-homepage .rtcp-viewer-commenter-box-input-sec::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--font-color-14);
 }
 
 .rtcp-self-commenter-box.active, .rtcp-vod-viewers-comment-box.active .rtcp-vod-viewers-comment{
